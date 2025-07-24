@@ -6,7 +6,7 @@ import streamlit as st
 
 CHROMA_PATH = "./chroma_db"
 RESPONSE_LLM = 'gemini-2.5-flash-lite-preview-06-17'
-GENAI_API_KEY = "AIzaSyAQ2U0t0yX7kMJuKPWTtcbTaYsHBPN0ELQ"
+GENAI_API_KEY = ""
 TOP_N_RESULTS = 5
 EMBED_MODEL_ID = "all-MiniLM-L6-v2"
 
