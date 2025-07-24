@@ -1,0 +1,54 @@
+{
+  "positive_test_cases": [
+    {
+      "question": "What is the study about?",
+      "expected_answer": "this study is about comparing consumer food shopping and consumption behavior in 2018 to 2017."
+    },
+    {
+      "question": "How did the consumption of the four food groups vary across household income levels?",
+      "expected_answer": "High-income households were more likely to purchase fruits and vegetables relative to low- and middle-income families, and are less likely to purchase dairy products."
+    },
+    {
+      "question": "How did consumers' food attitudes vary with education level?",
+      "expected_answer": "In general, consumers with post graduate degrees had the highest level of agreement with most of the food attitude statements, whereas those with lower education levels showed lower agreement."
+    },
+    {
+      "question": "Which age group made up the largest percentage of the sample population?",
+      "expected_answer": "65 and over"
+    },
+    {
+      "question": "In which year were food at home expenditures closest to food away from home expenditures?",
+      "expected_answer": "One or more of [2003, 2010]."
+    },
+    {
+      "question": "Which age group(s) were less likely to buy store brand items in response to price increases?",
+      "expected_answer": "One or more of [45-54, 55-64, 65+]."
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "question": "How did consumer income level affect choice of food outlet?",
+      "expected_answer": "Higher income families shopped at fewer outlets compared to middle and low income families."
+    },
+    {
+      "question": "How did consumers' food attitudes vary with age group?",
+      "expected_answer": "In general, consumers aged between 55 and 64 had the highest level of agreement with most of the food attitude statements, whereas those below 45 years old showed lower agreement."
+    },
+    {
+      "question": "How did consumers' beverage attitudes vary with education level?",
+      "expected_answer": "In general, postgraduates were more likely to report sodium as the worst beverage characteristic compared to high school and college graduates."
+    },
+    {
+      "question": "Which age group was most likely to eat fresh food instead of packaged food?",
+      "expected_answer": "25 to 34 years."
+    },
+    {
+      "question": "Which food outlet were middle-income families more likely to shop in compared to the other two income levels?",
+      "expected_answer": "Ethnic food stores."
+    },
+    {
+      "question": "Were college graduates more or less likely than postgraduates to consider added sugar the worst beverage characteristic?",
+      "expected_answer": "Less likely."
+    }
+  ]
+}
