@@ -1,54 +1,54 @@
 {
   "positive_test_cases": [
     {
-      "question": "What is the study about?",
-      "expected_answer": "this study is about comparing consumer food shopping and consumption behavior in 2018 to 2017."
+      "question": "What is the purpose of the study?",
+      "expected_answer": "The purpose of the study was to gain insights on consumers' food-related perspectives including preferences and consumption patterns."
     },
     {
-      "question": "How did the consumption of the four food groups vary across household income levels?",
-      "expected_answer": "High-income households were more likely to purchase fruits and vegetables relative to low- and middle-income families, and are less likely to purchase dairy products."
+      "question": "In what age range did consumers prefer cost-saving measures and what were these measures?",
+      "expected_answer": "Consumers under 45 prefered cost-saving measures including store brands, bulk purchases, and changing outlets."
     },
     {
-      "question": "How did consumers' food attitudes vary with education level?",
-      "expected_answer": "In general, consumers with post graduate degrees had the highest level of agreement with most of the food attitude statements, whereas those with lower education levels showed lower agreement."
+      "question": "What is the relationship between food outlet choices and income levels?",
+      "expected_answer": "At least one of: In 2018 the most popular outlets were supermarkets, supercenters and mass merchandisers; high-income families were more likely to shop at various outlets"
     },
     {
-      "question": "Which age group made up the largest percentage of the sample population?",
-      "expected_answer": "65 and over"
+      "question": "What is the relationship between food and beverage purchase patterns and income levels?",
+      "expected_answer": "At least one of: high-income families were more likely to purchase fruits and vegetables; low-income families were more likely to purchase dairy products; families with young children are more likely to consume energy drinks compared to families without children."
     },
     {
       "question": "In which year were food at home expenditures closest to food away from home expenditures?",
       "expected_answer": "One or more of [2003, 2010]."
     },
     {
-      "question": "Which age group(s) were less likely to buy store brand items in response to price increases?",
+      "question": "Based on the data, which age group might be least likely to buy store brand items in response to price increases?",
       "expected_answer": "One or more of [45-54, 55-64, 65+]."
     }
   ],
   "negative_test_cases": [
     {
-      "question": "How did consumer income level affect choice of food outlet?",
-      "expected_answer": "Higher income families shopped at fewer outlets compared to middle and low income families."
+      "question": "Which age group made up the highest percentage of the sample that was studied?",
+      "expected_answer": "35 to 44 years."
     },
     {
-      "question": "How did consumers' food attitudes vary with age group?",
-      "expected_answer": "In general, consumers aged between 55 and 64 had the highest level of agreement with most of the food attitude statements, whereas those below 45 years old showed lower agreement."
+      "question": "What were consumers' most preferred nurtients?",
+      "expected_answer": "At least one of: turmeric; folic acid; iron."
     },
     {
-      "question": "How did consumers' beverage attitudes vary with education level?",
-      "expected_answer": "In general, postgraduates were more likely to report sodium as the worst beverage characteristic compared to high school and college graduates."
+      "question": "what relationship was found between education level and beverage characteristic perceptions?",
+      "expected_answer": "Postgraduates were more likely to report sodium as the worst beverage characteristic compared to high school and college graduates."
     },
     {
-      "question": "Which age group was most likely to eat fresh food instead of packaged food?",
-      "expected_answer": "25 to 34 years."
+      "question": "what food-related perception was the same across all education levels?",
+      "expected_answer": "Preference of fresh foods over packaged foods."
     },
     {
-      "question": "Which food outlet were middle-income families more likely to shop in compared to the other two income levels?",
-      "expected_answer": "Ethnic food stores."
+      "question": "what age group showed the highest average agreement with the food statements?",
+      "expected_answer": "55 to 64 years."
     },
     {
-      "question": "Were college graduates more or less likely than postgraduates to consider added sugar the worst beverage characteristic?",
-      "expected_answer": "Less likely."
+      "question": "What did the study conclude?",
+      "expected_answer": "At least one of: Average 2018 weekly grocery expenditure was $285; the primary shoping outlets were warehouses and ethnic stores; all age groups deal with price changes the same; 2018 trends were different to 2017."
     }
   ]
 }

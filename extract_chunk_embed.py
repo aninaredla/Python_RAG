@@ -14,6 +14,7 @@ MAX_TOKENS = 256
 TOKEN_OVERLAP = 64
 EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
 CHROMA_PATH = "./chroma_db"
+COLLECTION_NAME = "docling_chunks"
 
 
 def main():
@@ -42,7 +43,6 @@ def create_docling_doc(data_path):
     doc = result.document
     return doc
 
-# doc = create_docling_doc(PDF_PATH)
 
 # --- STEP 2: Chunking ---
 def get_chunks_and_chunk_texts(embedding_model, max_tokens, overlap_tokens, docling_doc):
@@ -61,14 +61,10 @@ def get_chunks_and_chunk_texts(embedding_model, max_tokens, overlap_tokens, docl
     chunk_texts = [chunk.text for chunk in chunks]
     return chunks, chunk_texts
 
-# chunks, chunk_texts = get_chunks_and_chunk_texts(EMBED_MODEL_ID, MAX_TOKENS, TOKEN_OVERLAP, doc)
-# print(chunks[5:7])
-# print('\n')
     # Part 2: chunk structured tables
 # tables, table_metadatas = extract_tables_with_numbering(PDF_PATH)
 # chunk_texts = [chunk.text for chunk in chunks]
 # chunk_texts.extend(tables)
-
 
 def extract_metadatas(chunks):
     def extract_metadata(chunk):
@@ -87,9 +83,6 @@ def extract_metadatas(chunks):
 
     return [extract_metadata(chunk) for chunk in chunks]
 
-# metadatas = extract_metadatas(chunks)
-# print(metadatas[15:18])
-# print('\n')
 
 def make_chunk_ids(chunks, metadatas):
 
@@ -122,24 +115,13 @@ def make_chunk_ids(chunks, metadatas):
     
     return ids
 
-# ids = make_chunk_ids(chunks)
-# print(ids[15:18])
-# print('\n')
-# print(metadatas[15:18])
-
-
-
-# metadatas = [extract_metadata(chunk) for chunk in chunks]
-# metadatas.extend(table_metadatas)
-# print(metadatas[4])
-# print(assert len(metadatas) == len(chunks) == len(chunk_texts))
 
 # --- STEP 3: Embedding + Vector DB Setup ---
 def create_and_update_vector_db(embedding_model, chunk_texts, metadatas, ids):
     
     embedding_function = SentenceTransformerEmbeddingFunction(model_name=embedding_model)
     chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
-    collection = chroma_client.get_or_create_collection(name="docling_chunks",embedding_function=embedding_function)
+    collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME, embedding_function=embedding_function)
     collection.upsert(documents=chunk_texts, metadatas=metadatas, ids = ids)
 
 

@@ -1,0 +1,5 @@
+[
+    "(Answer with 'true' or 'false') Can the Expected Answer be reasonably inferred using the Actual Answer?",
+    "(Answer with 'true' or 'false') Does the actual answer match the expected answer semantically?",
+    "(Answer with 'true' or 'false') Can the average individual derive the expected answer using the actual answer?"
+  ]
