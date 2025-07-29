@@ -61,10 +61,6 @@ def get_chunks_and_chunk_texts(embedding_model, max_tokens, overlap_tokens, docl
     chunk_texts = [chunk.text for chunk in chunks]
     return chunks, chunk_texts
 
-    # Part 2: chunk structured tables
-# tables, table_metadatas = extract_tables_with_numbering(PDF_PATH)
-# chunk_texts = [chunk.text for chunk in chunks]
-# chunk_texts.extend(tables)
 
 def extract_metadatas(chunks):
     def extract_metadata(chunk):
