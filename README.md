@@ -1,4 +1,4 @@
-# Retrieval-Augmented Generation (RAG) Evaluation Program
+# Python Retrieval-Augmented Generation (RAG) Program: Chatbot and Evaluation
 
 ## Project Goal
 - Implement a retrieval augmented generation program for a chatbot for question-answering tasks.
