@@ -6,7 +6,7 @@ from extract_chunk_embed import CHROMA_PATH, COLLECTION_NAME, EMBED_MODEL_ID
 
 
 RESPONSE_LLM = 'gemini-2.5-flash-lite-preview-06-17'
-GENAI_API_KEY = ""
+GENAI_API_KEY = "AIzaSyAQ2U0t0yX7kMJuKPWTtcbTaYsHBPN0ELQ"
 TOP_N_RESULTS = 5
 
 
