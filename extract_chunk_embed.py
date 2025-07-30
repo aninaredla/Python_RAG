@@ -1,8 +1,4 @@
-from docling.document_converter import DocumentConverter
-from docling.chunking import HybridChunker
-from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from transformers import AutoTokenizer
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 import os
@@ -46,8 +42,6 @@ def load_documents(path):
 
     return raw_documents
 
-# raw_documents = load_documents(PDF_PATH)
-
 
 # --- STEP 2: Chunking ---
 def chunk_documents(chunk_size, chunk_overlap, raw_documents, max_tokens):
@@ -66,40 +60,36 @@ def chunk_documents(chunk_size, chunk_overlap, raw_documents, max_tokens):
             "text": chunk["text"],
             "metadata": chunk["metadata"][0]["metadata"]
         })
-    # Each merged chunk will now have: {"text": ..., "metadata": [...]}
+
     return simplified_chunks
 
 
-# def make_chunk_ids(chunks, metadatas):
-
-#     ids = []
-#     last_page_id = None
-#     current_chunk_index = 0
-
-#     for i, chunk in enumerate(chunks):
-#         filename = str(chunk.meta.origin.filename)
-#         title = str(chunk.meta.headings[0] if chunk.meta.headings else None)
-
-#         page_numbers = sorted(set(
-#         prov.page_no
-#         for item in chunk.meta.doc_items
-#         for prov in item.prov
-#         ))
-#         current_page_numbers = ",".join(map(str, page_numbers)) if page_numbers else None
-#         current_page_id = f"{filename}:{title}:{current_page_numbers}"
-#         # If the page ID is the same as the last one, increment the index.
-#         if current_page_id == last_page_id:
-#             current_chunk_index += 1
-#         else:
-#             current_chunk_index = 0
-#         # Calculate the chunk ID.
-#         chunk_id = f"{current_page_id}:{current_chunk_index}"
-#         last_page_id = current_page_id
-#         ids.append(chunk_id)
-
-#         metadatas[i]["id"] = chunk_id
+def make_chunk_ids(chunks):
     
-#     return ids
+    ids = []
+    last_page_id = None
+    current_chunk_index = 0
+
+    for chunk in chunks:
+        metadata = chunk["metadata"]
+        filename = str(metadata.get("source", "unknown"))
+        title = str(metadata.get("title", "None"))
+        page_label = "page_" + str(metadata.get("page_label", metadata.get("page", "None")))
+
+        current_page_id = f"{filename}:{title}:{page_label}"
+
+        if current_page_id == last_page_id:
+            current_chunk_index += 1
+        else:
+            current_chunk_index = 0
+
+        chunk_id = f"{current_page_id}:{current_chunk_index}"
+        last_page_id = current_page_id
+        ids.append(chunk_id)
+
+        chunk["metadata"]["id"] = chunk_id
+
+    return ids
 
 
 # --- STEP 3: Embedding + Vector DB Setup ---
