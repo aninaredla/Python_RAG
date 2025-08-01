@@ -7,7 +7,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from semantic_chunker.core import SemanticChunker
 
 # Setup
-PDF_PATH = "FE1164.pdf"
+PDF_PATH = "test_pdfs/de_driver_manual.pdf"
 MAX_TOKENS = 256
 TOKEN_OVERLAP = 64
 EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
@@ -65,7 +65,7 @@ def chunk_documents(chunk_size, chunk_overlap, raw_documents, max_tokens):
 
 
 def make_chunk_ids(chunks):
-    
+
     ids = []
     last_page_id = None
     current_chunk_index = 0

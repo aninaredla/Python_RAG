@@ -3,10 +3,11 @@ import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 import streamlit as st
 from extract_chunk_embed import CHROMA_PATH, COLLECTION_NAME, EMBED_MODEL_ID
+import os
 
 
 RESPONSE_LLM = 'gemini-2.5-flash-lite-preview-06-17'
-GENAI_API_KEY = "AIzaSyAQ2U0t0yX7kMJuKPWTtcbTaYsHBPN0ELQ"
+GENAI_API_KEY = ""
 TOP_N_RESULTS = 5
 
 
@@ -52,6 +53,7 @@ def main():
             query_embedding = encode_query(user_query)
             results = table.query(query_embeddings=[query_embedding], n_results=TOP_N_RESULTS)
             context_docs = results["documents"]
+            context_metadatas = results["metadatas"]
 
             # Generate and display response
             full_prompt = build_retrieval_prompt(context_docs, user_query)
@@ -61,7 +63,12 @@ def main():
         st.success(answer)
 
         with st.expander("🔍 Retrieved Context Chunks"):
-            for doc in context_docs:
+            for i, doc in enumerate(context_docs[0]):
+                metadata = context_metadatas[0][i]
+                filename = os.path.basename(metadata.get('source', 'Unknown file'))
+                page_number = metadata.get('page_label', metadata.get('page', 0) + 1)
+
+                st.markdown(f"**Source:** {filename} — **Page:** {page_number}")
                 st.markdown(f"```text\n{doc[:500]}\n```")
 
 
