@@ -7,7 +7,7 @@ import os
 
 
 RESPONSE_LLM = 'gemini-2.5-flash-lite-preview-06-17'
-GENAI_API_KEY = ""
+GENAI_API_KEY = "AIzaSyAQ2U0t0yX7kMJuKPWTtcbTaYsHBPN0ELQ"
 TOP_N_RESULTS = 5
 
 
@@ -37,7 +37,7 @@ Question:
 
 
 def main():
-    st.set_page_config(page_title="Nutritionist Chatbot", layout="centered")
+    st.set_page_config(page_title="Driver Manual Chatbot", layout="centered")
     st.title("RAG Chatbot")
     st.write("Ask a question based on the document.")
 

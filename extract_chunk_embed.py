@@ -3,11 +3,11 @@ import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 import os
 import shutil
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader
 from semantic_chunker.core import SemanticChunker
 
 # Setup
-PDF_PATH = "test_pdfs/de_driver_manual.pdf"
+PDF_PATH = "test_pdfs"
 MAX_TOKENS = 256
 TOKEN_OVERLAP = 64
 EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
@@ -37,7 +37,7 @@ def main():
 # --- STEP 1: Load PDF ---
 def load_documents(path):
 
-    loader = PyPDFLoader(path)
+    loader = PyPDFDirectoryLoader(path)
     raw_documents = loader.load()
 
     return raw_documents
