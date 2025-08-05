@@ -16,7 +16,7 @@ def generate_llm_response(test_case):
 
     user_query = test_case['question']
     print("Question: " + user_query + '\n')
-    print('Expected Answer: ' + test_case['expected_answer'] + '\n')
+    print('Expected Answer: ' + test_case['answer'] + '\n')
     # Set up all external systems
     chroma_client, llm = configure_clients()
     table = chroma_client.get_collection(COLLECTION_NAME)
@@ -39,27 +39,15 @@ def main():
     with open("rag_tests.json", "r") as file:
         test_data = json.load(file)
 
-    negative_cases = test_data["negative_test_cases"]
-    positive_cases = test_data["positive_test_cases"]
-
     with open('evaluation_prompts.json', 'r', encoding='utf-8') as f:
         evaluation_prompts = json.load(f)
 
     print("===========================\n=== Positive Test Cases ===\n===========================\n")
-    for i, case in enumerate(positive_cases):
+    for i, case in enumerate(test_data):
         print('------------------------------------\n\n-------------------------------------')
         print("Case Number: " + str(i+1))
         actual_answer, llm = generate_llm_response(case)
-        eval_prompt_formatted = build_evaluation_prompt(evaluation_prompts[0], case['expected_answer'], actual_answer)
-        evaluation = llm.generate_content(eval_prompt_formatted).text
-        print("Evaluation: " + evaluation + "\n")
-
-    print("===========================\n=== Negative Test Cases ===\n===========================\n")
-    for i, case in enumerate(negative_cases):
-        print('------------------------------------\n\n-------------------------------------')
-        print("Case Number: " + str(i+1))
-        actual_answer, llm = generate_llm_response(case)
-        eval_prompt_formatted = build_evaluation_prompt(evaluation_prompts[0], case['expected_answer'], actual_answer)
+        eval_prompt_formatted = build_evaluation_prompt(evaluation_prompts[0], case['answer'], actual_answer)
         evaluation = llm.generate_content(eval_prompt_formatted).text
         print("Evaluation: " + evaluation + "\n")
 

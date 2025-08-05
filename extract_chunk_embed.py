@@ -1,10 +1,13 @@
+from collections import defaultdict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 import os
 import shutil
-from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader, PyPDFLoader
 from semantic_chunker.core import SemanticChunker
+import time
+import concurrent.futures
 
 # Setup
 PDF_PATH = "test_pdfs"
@@ -26,28 +29,58 @@ def main():
             print("Using existing vector DB. Exiting early.")
             return
     
-    raw_documents = load_documents(PDF_PATH)
+    
+    # raw_documents = load_documents(PDF_PATH)
+    raw_documents = load_documents_from_directory(PDF_PATH)
+    # print(len(raw_documents))
+
     chunks = chunk_documents(800, 200, raw_documents, 256)
     chunk_texts = [chunk['text'] for chunk in chunks]
     chunk_metadatas = [chunk['metadata'] for chunk in chunks]
-    ids = [f"ID{i}" for i in range(len(chunk_texts))]
+    ids = make_chunk_ids(chunks)
+
     create_and_update_vector_db(EMBED_MODEL_ID, chunk_texts, chunk_metadatas, ids)
 
 
-# --- STEP 1: Load PDF ---
-def load_documents(path):
+def load_documents_from_directory(directory):
 
-    loader = PyPDFDirectoryLoader(path)
-    raw_documents = loader.load()
+    def load_document(file_path):
+        loader = PyPDFLoader(file_path)
+        file_docs = loader.load()
+        print(f"Successfully loaded {os.path.basename(file_path)}")
+        return file_docs
 
-    return raw_documents
+    try:
+        filenames = os.listdir(directory)
+    except FileNotFoundError:
+        print(f"Directory not found: {directory}")
+        return []
+    except PermissionError:
+        print(f"Permission denied for directory: {directory}")
+        return []
+
+    file_paths = [os.path.join(directory, f) for f in filenames if f.endswith(".pdf")]
+
+    start = time.perf_counter()
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = executor.map(load_document, file_paths)
+
+    raw_docs = []
+    for doc_list in results:
+        raw_docs.extend(doc_list)
+
+    finish = time.perf_counter()
+    print(f"Process finished in {finish-start:.2f} seconds.")
+
+    return raw_docs
 
 
 # --- STEP 2: Chunking ---
-def chunk_documents(chunk_size, chunk_overlap, raw_documents, max_tokens):
+def chunk_documents(chunk_size, chunk_overlap, raw_documents_batch, max_tokens):
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    chunks = text_splitter.split_documents(raw_documents)
+    chunks = text_splitter.split_documents(raw_documents_batch)
 
     formatted_chunk_list = [{"text": chunk.page_content, "metadata": chunk.metadata} for chunk in chunks]
 
@@ -65,29 +98,25 @@ def chunk_documents(chunk_size, chunk_overlap, raw_documents, max_tokens):
 
 
 def make_chunk_ids(chunks):
-
     ids = []
-    last_page_id = None
-    current_chunk_index = 0
+    page_counters = defaultdict(int)
 
     for chunk in chunks:
         metadata = chunk["metadata"]
-        filename = str(metadata.get("source", "unknown"))
-        title = str(metadata.get("title", "None"))
-        page_label = "page_" + str(metadata.get("page_label", metadata.get("page", "None")))
 
-        current_page_id = f"{filename}:{title}:{page_label}"
+        filename = os.path.splitext(os.path.basename(str(metadata.get("source", "unknown"))))[0].lower()
+        title = str(metadata.get("title", "None")).strip() or "None"
+        page_label = metadata.get("page_label", metadata.get("page", "None"))
+        page_label = f"page_{page_label}"
 
-        if current_page_id == last_page_id:
-            current_chunk_index += 1
-        else:
-            current_chunk_index = 0
+        key = f"{filename}:{title}:{page_label}"
+        chunk_index = page_counters[key]
 
-        chunk_id = f"{current_page_id}:{current_chunk_index}"
-        last_page_id = current_page_id
-        ids.append(chunk_id)
+        chunk_id = f"{key}:{chunk_index}"
+        page_counters[key] += 1
 
         chunk["metadata"]["id"] = chunk_id
+        ids.append(chunk_id)
 
     return ids
 
