@@ -8,7 +8,7 @@ import time
 
 
 RESPONSE_LLM = 'gemini-2.5-flash-lite-preview-06-17'
-GENAI_API_KEY = "AIzaSyAQ2U0t0yX7kMJuKPWTtcbTaYsHBPN0ELQ"
+GENAI_API_KEY = ""
 TOP_N_RESULTS = 5
 
 
@@ -54,8 +54,11 @@ def main():
             query_embedding = encode_query(user_query)
             t1 = time.perf_counter()
             results = table.query(query_embeddings=[query_embedding], n_results=TOP_N_RESULTS)
+            st.markdown(f"🔎 Collection count: {table.count()} documents.")
+
             t2 = time.perf_counter()
-            st.markdown("Chunk Retrieval Time: " + str(t2-t1) + "s")
+            st.markdown("Chunk Retrieval Time: " + str(t2-t1) + "s.")
+            st.markdown("Retrieved " + str(len(results)) + " chunks.")
             context_docs = results["documents"]
             context_metadatas = results["metadatas"]
             context_ids = results["ids"]
@@ -65,12 +68,14 @@ def main():
             t3 = time.perf_counter()
             answer = llm.generate_content(full_prompt).text
             t4 = time.perf_counter()
-            st.markdown("LLM Response Generation Time: " + str(t4-t3) + "s")
+            st.markdown("LLM Response Generation Time: " + str(t4-t3) + "s.")
 
-        st.markdown("## 💬 Answer")
+            st.markdown(f"{context_docs}")
+
+        st.markdown("## 💬 LLM Answer")
         st.success(answer)
 
-        with st.expander("🔍 Retrieved Context Chunks"):
+        with st.expander("🔍 Retrieved Context Chunks:"):
             for i, doc in enumerate(context_docs[0]):
                 metadata = context_metadatas[0][i]
                 id = context_ids[0][i]
