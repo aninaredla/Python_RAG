@@ -7,158 +7,112 @@ from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunct
 import os
 import shutil
 from langchain.document_loaders import PyPDFLoader
-from semantic_chunker.core import SemanticChunker
 import concurrent.futures
 
-# # Setup
+# Setup
 PDF_PATH = "test_pdfs"
-MAX_TOKENS = 256
-TOKEN_OVERLAP = 64
 EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
 CHROMA_PATH = "./chroma_db"
-COLLECTION_NAME = "docling_chunks"
+COLLECTION_NAME = "driving_manual_chunks"
+CHUNKS_PATH = "chunks_dict_list.json"
 
-
-def load_documents_from_directory(directory):
-
-    def load_document(file_path):
-        loader = PyPDFLoader(file_path)
-        file_docs = loader.load()
-        return file_docs
-
+def load_and_chunk_documents(directory, chunk_size=800, chunk_overlap=200):
+    """Load PDFs and chunk them in one step."""
     try:
-        filenames = os.listdir(directory)
-    except FileNotFoundError:
-        print(f"Directory not found: {directory}")
+        file_paths = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith(".pdf")]
+    except (FileNotFoundError, PermissionError) as e:
+        print(f"Error accessing directory {directory}: {e}")
         return []
-    except PermissionError:
-        print(f"Permission denied for directory: {directory}")
-        return []
-
-    file_paths = [os.path.join(directory, f) for f in filenames if f.endswith(".pdf")]
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = executor.map(load_document, file_paths)
-
-    raw_docs = []
-    for doc_list in results:
-        raw_docs.extend(doc_list)
-
-    return raw_docs
-
-
-# --- STEP 2: Chunking ---
-def chunk_documents(chunk_size, chunk_overlap, raw_documents_batch, max_tokens):
     
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    chunks = text_splitter.split_documents(raw_documents_batch)
-
-    formatted_chunk_list = [{"text": chunk.page_content, "metadata": chunk.metadata} for chunk in chunks]
-
-    chunker = SemanticChunker(max_tokens=max_tokens)
-    merged_chunks = chunker.chunk(formatted_chunk_list)
-
-    simplified_chunks = []
-    for chunk in merged_chunks:
-        simplified_chunks.append({
-            "text": chunk["text"],
-            "metadata": chunk["metadata"][0]["metadata"]
-        })
-
-    return simplified_chunks
+    def process_file(file_path):
+        docs = PyPDFLoader(file_path).load()
+        splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        return splitter.split_documents(docs)
+    
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = executor.map(process_file, file_paths)
+    
+    chunks = []
+    for chunk_list in results:
+        chunks.extend(chunk_list)
+    
+    return chunks
 
 
-def make_chunk_ids(chunks):
-    ids = []
+def format_chunks_with_ids(chunks):
+    """Format chunks and generate unique IDs."""
     page_counters = defaultdict(int)
-
+    formatted_chunks = []
+    
     for chunk in chunks:
-        metadata = chunk["metadata"]
-
+        metadata = chunk.metadata
         filename = os.path.splitext(os.path.basename(str(metadata.get("source", "unknown"))))[0].lower()
         title = str(metadata.get("title", "None")).strip() or "None"
-        page_label = metadata.get("page_label", metadata.get("page", "None"))
-        page_label = f"page_{page_label}"
-
+        page_label = f"page_{metadata.get('page_label', metadata.get('page', 'None'))}"
+        
         key = f"{filename}:{title}:{page_label}"
         chunk_index = page_counters[key]
-
         chunk_id = f"{key}:{chunk_index}"
         page_counters[key] += 1
-
-        chunk["metadata"]["id"] = chunk_id
-        ids.append(chunk_id)
-
-    return ids
-
-
-def format_chunks(all_chunks):
-
-    documents = [chunk["text"] for chunk in all_chunks]
-    metadatas = [chunk["metadata"] for chunk in all_chunks]
-    ids = make_chunk_ids(all_chunks)
-
-    chunks_dict_list = []
-    for i in range(len(all_chunks)):
-        chunks_dict_list.append({
-            'text': documents[i],
-            'metadata': metadatas[i],
-            'id': ids[i]
+        
+        formatted_chunks.append({
+            'text': chunk.page_content,
+            'metadata': {**metadata, 'id': chunk_id},
+            'id': chunk_id
         })
     
-    return chunks_dict_list
+    return formatted_chunks
 
 
-def chunks_to_json(chunks_dict_list):
-
-    chunks_path = 'chunks_dict_list.json'
-    with open(chunks_path, "w", encoding="utf-8") as f:
-        json.dump(chunks_dict_list, f, ensure_ascii=False, indent=4)
-    
-    return chunks_path
+def save_chunks_json(chunks, path):
+    """Save chunks to JSON file."""
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(chunks, f, ensure_ascii=False, indent=4)
+    return path
 
 
-# --- STEP 3: Embedding + Vector DB Setup ---
-def create_and_update_vector_db(chunks_path, num_batches = 3):
-    
+def create_vector_db(chunks_path, num_batches=3):
+    """Create and populate ChromaDB with chunks."""
     embedding_function = SentenceTransformerEmbeddingFunction(model_name=EMBED_MODEL_ID)
     chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
     collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME, embedding_function=embedding_function)
 
     with open(chunks_path, 'r', encoding='utf-8') as f:
-        chunks_dict_list = json.load(f)
+        chunks = json.load(f)
 
-    batch_size = math.ceil(len(chunks_dict_list)/num_batches)
-    batches = [chunks_dict_list[i:i + batch_size] for i in range(0, len(chunks_dict_list), batch_size)]
+    batch_size = math.ceil(len(chunks) / num_batches)
+    batches = [chunks[i:i + batch_size] for i in range(0, len(chunks), batch_size)]
 
-    def upsert_individual_batch(chunk_batch):
-        documents = [chunk['text'] for chunk in chunk_batch]
-        metadatas = [chunk['metadata'] for chunk in chunk_batch]
-        ids = [chunk['id'] for chunk in chunk_batch]
-        collection.upsert(documents=documents, metadatas=metadatas, ids = ids)
+    def upsert_batch(batch):
+        collection.upsert(
+            documents=[chunk['text'] for chunk in batch],
+            metadatas=[chunk['metadata'] for chunk in batch],
+            ids=[chunk['id'] for chunk in batch]
+        )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(upsert_individual_batch, batches)
+        executor.map(upsert_batch, batches)
 
 
 def main():
-
+    
     if os.path.exists(CHROMA_PATH):
-        clear_db = input("Clear and re-create database (y/n)? :  ")
-        if clear_db.lower() == 'y':
+        if input("Clear and re-create database (y/n)? : ").lower() == 'y':
             shutil.rmtree(CHROMA_PATH)
-            print("Clearing and re-creating vector database.")
+            if os.path.exists(CHUNKS_PATH):
+                os.remove(CHUNKS_PATH)
+            print("Clearing and re-creating vector database and chunks file.")
         else:
             print("Using existing vector DB. Exiting early.")
             return
     
-    raw_documents = load_documents_from_directory(PDF_PATH)
-
-    chunks = chunk_documents(800, 200, raw_documents, 256)
-    chunks_dict_list = format_chunks(chunks)
-    chunks_path = chunks_to_json(chunks_dict_list)
-
-    create_and_update_vector_db(chunks_path)
+    # Process pipeline
+    chunks = load_and_chunk_documents(PDF_PATH)
+    formatted_chunks = format_chunks_with_ids(chunks)
+    save_chunks_json(formatted_chunks, CHUNKS_PATH)
+    create_vector_db(CHUNKS_PATH)
+    
+    print(f"✅ Processed {len(formatted_chunks)} chunks into vector database.")
 
 
 if __name__ == "__main__":
